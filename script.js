@@ -58,7 +58,7 @@ window.addEventListener('scroll', function() {
 });
 
 // Form Submission Handling
-document.getElementById('contactForm').addEventListener('submit', function(e) {
+document.getElementById('contactForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
     // Get form data
@@ -78,17 +78,56 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
         return;
     }
     
-    // Simulate form submission (replace with actual form handling)
-    showNotification('Thank you! We\'ll get back to you within 24 hours.', 'success');
-    
-    // Reset form
-    this.reset();
-    
-    // Scroll to top to show notification
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
+    try {
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Sending...';
+        submitBtn.disabled = true;
+        
+        // Send to Firebase Function
+        const response = await fetch('https://us-central1-bakery-biz.cloudfunctions.net/contactForm', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: data.name,
+                business: data.business,
+                email: data.email,
+                phone: data.phone || '',
+                package: data.package,
+                message: data.message || ''
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to submit form');
+        }
+        
+        const result = await response.json();
+        
+        // Success notification
+        showNotification('Thank you! We\'ll get back to you within 24 hours.', 'success');
+        
+        // Reset form
+        this.reset();
+        
+        // Scroll to top to show notification
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+        
+    } catch (error) {
+        console.error('Error submitting form:', error);
+        showNotification('Sorry, there was an error submitting your form. Please try again.', 'error');
+    } finally {
+        // Reset button state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    }
 });
 
 // Notification System
