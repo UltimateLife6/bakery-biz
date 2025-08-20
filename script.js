@@ -80,12 +80,13 @@ document.getElementById('contactForm').addEventListener('submit', async function
         return;
     }
     
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Sending...';
+    submitBtn.disabled = true;
+    
     try {
-        // Show loading state
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Sending...';
-        submitBtn.disabled = true;
         
         // Send to Firebase Function
         console.log('Submitting form data:', {
