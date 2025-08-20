@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     navLinks.forEach(link => {
         link.addEventListener('click', function() {
             navMenu.classList.remove('active');
+            const bars = document.querySelectorAll('.bar');
             bars.forEach(bar => bar.classList.remove('active'));
         });
     });
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
             navMenu.classList.remove('active');
+            const bars = document.querySelectorAll('.bar');
             bars.forEach(bar => bar.classList.remove('active'));
         }
     });
@@ -86,6 +88,15 @@ document.getElementById('contactForm').addEventListener('submit', async function
         submitBtn.disabled = true;
         
         // Send to Firebase Function
+        console.log('Submitting form data:', {
+            name: data.name,
+            business: data.business,
+            email: data.email,
+            phone: data.phone || '',
+            package: data.package,
+            message: data.message || ''
+        });
+        
         const response = await fetch('https://us-central1-bakery-biz.cloudfunctions.net/contactForm', {
             method: 'POST',
             headers: {
@@ -101,11 +112,17 @@ document.getElementById('contactForm').addEventListener('submit', async function
             })
         });
         
+        console.log('Response status:', response.status);
+        console.log('Response:', response);
+        
         if (!response.ok) {
-            throw new Error('Failed to submit form');
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            throw new Error(`Failed to submit form: ${response.status} ${errorText}`);
         }
         
         const result = await response.json();
+        console.log('Success result:', result);
         
         // Success notification
         showNotification('Thank you! We\'ll get back to you within 24 hours.', 'success');
