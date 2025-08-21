@@ -13,7 +13,7 @@ module.exports = {
     "object-curly-spacing": ["error", "never"],
     "comma-dangle": ["error", "always-multiline"],
     "no-trailing-spaces": "error",
-    "padded-blocks": ["error", "never"],
+    "padded-blocks": "off",
   },
   parserOptions: {
     ecmaVersion: 2018,

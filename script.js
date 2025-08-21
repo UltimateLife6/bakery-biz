@@ -60,25 +60,8 @@ window.addEventListener('scroll', function() {
 });
 
 // Form Submission Handling
-document.getElementById('contactForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // Get form data
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData);
-    
-    // Basic validation
-    if (!data.name || !data.business || !data.email || !data.package) {
-        showNotification('Please fill in all required fields.', 'error');
-        return;
-    }
-    
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-        showNotification('Please enter a valid email address.', 'error');
-        return;
-    }
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    // Don't prevent default - let Formspree handle the submission
     
     // Show loading state
     const submitBtn = this.querySelector('button[type="submit"]');
@@ -86,66 +69,12 @@ document.getElementById('contactForm').addEventListener('submit', async function
     submitBtn.textContent = 'Sending...';
     submitBtn.disabled = true;
     
-    try {
-        
-        // Send to Firebase Function
-        console.log('Submitting form data:', {
-            name: data.name,
-            business: data.business,
-            email: data.email,
-            phone: data.phone || '',
-            package: data.package,
-            message: data.message || ''
-        });
-        
-        const response = await fetch('https://us-central1-bakery-biz.cloudfunctions.net/contactForm', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                name: data.name,
-                business: data.business,
-                email: data.email,
-                phone: data.phone || '',
-                package: data.package,
-                message: data.message || ''
-            })
-        });
-        
-        console.log('Response status:', response.status);
-        console.log('Response:', response);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Error response:', errorText);
-            throw new Error(`Failed to submit form: ${response.status} ${errorText}`);
-        }
-        
-        const result = await response.json();
-        console.log('Success result:', result);
-        
-        // Success notification
-        showNotification('Thank you! We\'ll get back to you within 24 hours.', 'success');
-        
-        // Reset form
-        this.reset();
-        
-        // Scroll to top to show notification
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-        
-    } catch (error) {
-        console.error('Error submitting form:', error);
-        showNotification('Sorry, there was an error submitting your form. Please try again.', 'error');
-    } finally {
-        // Reset button state
-        const submitBtn = this.querySelector('button[type="submit"]');
+    // Form will submit to Formspree automatically
+    // Reset button after a delay
+    setTimeout(() => {
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
-    }
+    }, 2000);
 });
 
 // Notification System

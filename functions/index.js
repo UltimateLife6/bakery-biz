@@ -42,10 +42,13 @@ exports.contactForm = onRequest(async (request, response) => {
   }
 
   try {
+    logger.info("Received request body:", request.body);
+
     const {name, business, email, phone, package, message} = request.body;
 
     // Basic validation
     if (!name || !business || !email || !package) {
+      logger.error("Missing required fields:", {name, business, email, package});
       response.status(400).json({error: "Missing required fields"});
       return;
     }
@@ -89,26 +92,45 @@ exports.sendEmailNotification = onDocumentCreated("contactSubmissions/{docId}", 
 
   logger.info("New contact submission received", {docId, submission});
 
-  // Here you would integrate with an email service like SendGrid, Mailgun, or Nodemailer
-  // For now, we'll just log the submission
-  logger.info("Email notification would be sent for:", {
-    to: "your-email@example.com",
-    subject: `New Website Inquiry from ${
-      submission.business
-    }`,
-    body: `
-      New inquiry received:
+  try {
+    // SendGrid setup
+    const sgMail = require("@sendgrid/mail");
 
-      Name: ${submission.name}
-      Business: ${submission.business}
-      Email: ${submission.email}
-      Phone: ${submission.phone || "Not provided"}
-      Package: ${submission.package}
-      Message: ${submission.message || "No message"}
+    // Get config from environment variables
+    const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+    const TO_EMAIL = process.env.TO_EMAIL;
 
-      Timestamp: ${submission.timestamp}
-    `,
-  });
+    if (!SENDGRID_API_KEY) {
+      logger.error("SendGrid API key not configured");
+      return null;
+    }
+
+    sgMail.setApiKey(SENDGRID_API_KEY);
+
+    const msg = {
+      to: TO_EMAIL,
+      from: "noreply@risedevelopment.io", // Using your verified domain
+      subject: `New Website Inquiry from ${submission.business}`,
+      html: `
+        <h2>New Website Inquiry Received!</h2>
+        <p><strong>Name:</strong> ${submission.name}</p>
+        <p><strong>Business:</strong> ${submission.business}</p>
+        <p><strong>Email:</strong> ${submission.email}</p>
+        <p><strong>Phone:</strong> ${submission.phone || "Not provided"}</p>
+        <p><strong>Package:</strong> ${submission.package}</p>
+        <p><strong>Message:</strong> ${submission.message || "No message"}</p>
+        <p><strong>Timestamp:</strong> ${submission.timestamp}</p>
+        <hr>
+        <p><em>This inquiry was submitted through your website contact form.</em></p>
+      `,
+    };
+
+    await sgMail.send(msg);
+    logger.info("Email sent successfully to:", TO_EMAIL);
+
+  } catch (error) {
+    logger.error("Error sending email:", error);
+  }
 
   return null;
 });
